@@ -35,9 +35,13 @@ public class DefaultEventDispatcher implements IEventDispatcher {
     private final List<IEventListener> eventListeners;
     private final Comparator<EventMethodInfo> eventMethodInfoComparator;
 
+    private final Map<Class<? extends IEvent>, List<EventMethodInfo>> eventMethodInfoMap;
+
     public DefaultEventDispatcher() {
-        this.eventListeners = new ArrayList<>();
+        this.eventListeners = Collections.synchronizedList(new LinkedList<>());
         this.eventMethodInfoComparator = new EventMethodInfoComparator();
+
+        this.eventMethodInfoMap = Collections.synchronizedMap(new LinkedHashMap<>());
     }
 
     @Override
@@ -47,6 +51,8 @@ public class DefaultEventDispatcher implements IEventDispatcher {
         }
 
         this.eventListeners.add(eventListener);
+
+        this.registerEventHandlerMethods(eventListener);
     }
 
     @Override
@@ -56,6 +62,18 @@ public class DefaultEventDispatcher implements IEventDispatcher {
         }
 
         this.eventListeners.remove(eventListener);
+
+        this.eventMethodInfoMap.values().stream().forEach(eventMethodInfos -> {
+            final Iterator<EventMethodInfo> eventMethodInfoIterator = eventMethodInfos.iterator();
+
+            while (eventMethodInfoIterator.hasNext()) {
+                final EventMethodInfo eventMethodInfo = eventMethodInfoIterator.next();
+
+                if (eventMethodInfo.eventListener.equals(eventListener)) {
+                    eventMethodInfoIterator.remove();
+                }
+            }
+        });
     }
 
     @Override
@@ -64,38 +82,25 @@ public class DefaultEventDispatcher implements IEventDispatcher {
             return false;
         }
 
-        final Queue<EventMethodInfo> eventMethodInfoQueue = new PriorityQueue<>(this.eventMethodInfoComparator);
+        final List<EventMethodInfo> eventMethodInfoQueue = this.eventMethodInfoMap.get(iEvent.getClass());
 
-        this.eventListeners.stream().forEach(eventListener -> {
-            for (final EventMethodInfo eventMethodInfo : this.findMatchingEventHandlerMethods(eventListener, iEvent)) {
-                eventMethodInfoQueue.offer(eventMethodInfo);
-            }
-        });
-
-        if (eventMethodInfoQueue.isEmpty()) {
+        if (eventMethodInfoQueue == null || eventMethodInfoQueue.isEmpty()) {
             return false;
         }
 
-        while (!eventMethodInfoQueue.isEmpty()) {
-            final EventMethodInfo eventMethodInfo = eventMethodInfoQueue.poll();
-
+        eventMethodInfoQueue.stream().sorted(this.eventMethodInfoComparator).forEach(eventMethodInfo -> {
             try {
                 eventMethodInfo.method.invoke(eventMethodInfo.eventListener, iEvent);
             } catch (final IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
-
-                if (eventMethodInfoQueue.isEmpty()) {
-                    return false;
-                }
             }
-        }
+        });
 
         return true;
     }
 
-    private EventMethodInfo[] findMatchingEventHandlerMethods(final IEventListener eventListener, final IEvent IEvent) {
+    private void registerEventHandlerMethods(final IEventListener eventListener) {
         final Method[] methods = eventListener.getClass().getDeclaredMethods();
-        final List<EventMethodInfo> result = new ArrayList<>();
 
         for (final Method method : methods) {
             if (!method.isAccessible()) {
@@ -132,13 +137,13 @@ public class DefaultEventDispatcher implements IEventDispatcher {
                 @SuppressWarnings("unchecked")
                 final Class<? extends IEvent> realParam = (Class<? extends IEvent>) param;
 
-                if (IEvent.getClass().equals(realParam)) {
-                    result.add(new EventMethodInfo(priority, eventListener, method));
+                if (!this.eventMethodInfoMap.containsKey(realParam)) {
+                    this.eventMethodInfoMap.put(realParam, Collections.synchronizedList(new LinkedList<>()));
                 }
+
+                this.eventMethodInfoMap.get(realParam).add(new EventMethodInfo(priority, eventListener, method));
             }
         }
-
-        return result.toArray(new EventMethodInfo[result.size()]);
     }
 
     private class EventMethodInfo {

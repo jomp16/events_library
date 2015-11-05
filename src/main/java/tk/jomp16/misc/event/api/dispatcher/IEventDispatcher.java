@@ -22,10 +22,15 @@ package tk.jomp16.misc.event.api.dispatcher;
 import tk.jomp16.misc.event.api.event.IEvent;
 import tk.jomp16.misc.event.api.listener.IEventListener;
 
+import java.io.IOException;
+import java.util.concurrent.Future;
+
 public interface IEventDispatcher {
     void addListener(final IEventListener eventListener);
 
     void removeListener(final IEventListener eventListener);
 
-    boolean dispatchEvent(final IEvent iEvent);
+    Future<Void> dispatchEvent(final IEvent iEvent);
+
+    void close() throws IOException;
 }

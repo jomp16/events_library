@@ -20,7 +20,7 @@
 apply plugin: 'java'
 
 group 'tk.jomp16.misc'
-version '1.0.1-SNAPSHOT'
+version '1.0.1_future'
 
 //noinspection GroovyUnusedAssignment
 sourceCompatibility = 1.8
@@ -35,19 +35,9 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-task buildInfo {
-    def cmd = "git rev-parse --short HEAD"
-    def proc = cmd.execute()
-
-    rootProject.version += "-git_" + proc.text.trim()
-}
-
 jar {
     manifest {
         attributes 'Implementation-Title': project.name,
                 'Implementation-Version': project.version
     }
 }
-
-//noinspection GroovyAssignabilityCheck, GrUnresolvedAccess
-jar.dependsOn buildInfo

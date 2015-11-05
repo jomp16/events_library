@@ -24,20 +24,33 @@ import tk.jomp16.misc.event.api.dispatcher.IEventDispatcher;
 import tk.jomp16.misc.event.api.event.IEvent;
 import tk.jomp16.misc.event.api.listener.IEventListener;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 // Code from the following URLs, adapted to my requirements. Thanks!
 // http://codereview.stackexchange.com/questions/36153/my-event-handling-system
 // https://gmarabout.wordpress.com/2010/09/23/annotation-based-event-handling-in-java
 public class DefaultEventDispatcher implements IEventDispatcher {
+    private final ExecutorService executor;
+
     private final List<IEventListener> eventListeners;
     private final Comparator<EventMethodInfo> eventMethodInfoComparator;
 
     private final Map<Class<? extends IEvent>, List<EventMethodInfo>> eventMethodInfoMap;
 
     public DefaultEventDispatcher() {
+        this(Executors.newCachedThreadPool());
+    }
+
+    public DefaultEventDispatcher(final ExecutorService executor) {
+        this.executor = executor;
+
         this.eventListeners = Collections.synchronizedList(new LinkedList<>());
         this.eventMethodInfoComparator = new EventMethodInfoComparator();
 
@@ -77,26 +90,32 @@ public class DefaultEventDispatcher implements IEventDispatcher {
     }
 
     @Override
-    public boolean dispatchEvent(final IEvent iEvent) {
+    public Future<Void> dispatchEvent(final IEvent iEvent) {
         if (iEvent == null) {
-            return false;
+            return null;
         }
 
         final List<EventMethodInfo> eventMethodInfoQueue = this.eventMethodInfoMap.get(iEvent.getClass());
 
         if (eventMethodInfoQueue == null || eventMethodInfoQueue.isEmpty()) {
-            return false;
+            return null;
         }
 
-        eventMethodInfoQueue.stream().sorted(this.eventMethodInfoComparator).forEach(eventMethodInfo -> {
-            try {
-                eventMethodInfo.method.invoke(eventMethodInfo.eventListener, iEvent);
-            } catch (final IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
+        final FutureTask<Void> future = new FutureTask<>(() -> {
+            eventMethodInfoQueue.stream().sorted(this.eventMethodInfoComparator).forEach(eventMethodInfo -> {
+                try {
+                    eventMethodInfo.method.invoke(eventMethodInfo.eventListener, iEvent);
+                } catch (final IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            return null;
         });
 
-        return true;
+        this.executor.execute(future);
+
+        return future;
     }
 
     private void registerEventHandlerMethods(final IEventListener eventListener) {
@@ -144,6 +163,11 @@ public class DefaultEventDispatcher implements IEventDispatcher {
                 this.eventMethodInfoMap.get(realParam).add(new EventMethodInfo(priority, eventListener, method));
             }
         }
+    }
+
+    @Override
+    public void close() throws IOException {
+        this.executor.shutdown();
     }
 
     private class EventMethodInfo {

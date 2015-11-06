@@ -17,16 +17,16 @@
  * along with events_library. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package tk.jomp16.misc.event;
+package tk.jomp16.event;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import tk.jomp16.misc.event.api.annotations.EventHandler;
-import tk.jomp16.misc.event.api.dispatcher.IEventDispatcher;
-import tk.jomp16.misc.event.api.event.IEvent;
-import tk.jomp16.misc.event.api.listener.IEventListener;
-import tk.jomp16.misc.event.internal.dispatcher.DefaultEventDispatcher;
+import tk.jomp16.event.api.annotations.EventHandler;
+import tk.jomp16.event.api.dispatcher.IEventDispatcher;
+import tk.jomp16.event.api.event.IEvent;
+import tk.jomp16.event.api.listener.IEventListener;
+import tk.jomp16.event.internal.dispatcher.DefaultEventDispatcher;
 
 import java.util.UUID;
 

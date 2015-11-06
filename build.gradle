@@ -17,10 +17,14 @@
  * along with events_library. If not, see <http://www.gnu.org/licenses/>.
  */
 
-apply plugin: 'java'
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'com.jfrog.bintray' version '1.4'
+}
 
-group 'tk.jomp16.misc'
-version '1.0.1-SNAPSHOT'
+group 'tk.jomp16'
+version '1.0.2'
 
 //noinspection GroovyUnusedAssignment
 sourceCompatibility = 1.8
@@ -35,13 +39,6 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-task buildInfo {
-    def cmd = "git rev-parse --short HEAD"
-    def proc = cmd.execute()
-
-    rootProject.version += "-git_" + proc.text.trim()
-}
-
 jar {
     manifest {
         attributes 'Implementation-Title': project.name,
@@ -49,5 +46,32 @@ jar {
     }
 }
 
-//noinspection GroovyAssignabilityCheck, GrUnresolvedAccess
-jar.dependsOn buildInfo
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+}
+
+bintray {
+    user = System.properties['BINTRAY_USER']
+    key = System.properties['BINTRAY_KEY']
+
+    pkg {
+        repo = 'maven'
+        name = 'events_library'
+        licenses = ['LGPLv3']
+        vcsUrl = 'https://github.com/jomp16/events_library.git'
+
+        publications = ['mavenJava']
+    }
+}

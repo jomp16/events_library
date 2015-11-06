@@ -17,7 +17,22 @@
  * along with events_library. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package tk.jomp16.misc.event.api.listener;
+package tk.jomp16.event.api.annotations;
 
-public interface IEventListener {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface EventHandler {
+    /**
+     * Define the priority that the event will run. When priority is higher, the event will run first than the others with less priority.
+     * <p>
+     * Min is 0, max is 100. Don't try to use Integer.MAX_VALUE
+     *
+     * @return the priority, defaults to 50
+     */
+    byte priority() default 50;
 }

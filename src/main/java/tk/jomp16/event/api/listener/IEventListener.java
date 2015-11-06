@@ -17,15 +17,7 @@
  * along with events_library. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package tk.jomp16.misc.event.api.dispatcher;
+package tk.jomp16.event.api.listener;
 
-import tk.jomp16.misc.event.api.event.IEvent;
-import tk.jomp16.misc.event.api.listener.IEventListener;
-
-public interface IEventDispatcher {
-    void addListener(final IEventListener eventListener);
-
-    void removeListener(final IEventListener eventListener);
-
-    boolean dispatchEvent(final IEvent iEvent);
+public interface IEventListener {
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 jomp16
+ * Copyright (C) 2016 jomp16
  *
  * This file is part of events_library.
  *
@@ -17,8 +17,6 @@
  * along with events_library. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package tk.jomp16.event.api.event;
+package tk.jomp16.event.api.listener
 
-public interface IEvent {
-
-}
+interface IEventListener

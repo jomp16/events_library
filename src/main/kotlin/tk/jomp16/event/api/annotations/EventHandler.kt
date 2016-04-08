@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 jomp16
+ * Copyright (C) 2016 jomp16
  *
  * This file is part of events_library.
  *
@@ -17,15 +17,8 @@
  * along with events_library. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package tk.jomp16.event.api.dispatcher;
+package tk.jomp16.event.api.annotations
 
-import tk.jomp16.event.api.event.IEvent;
-import tk.jomp16.event.api.listener.IEventListener;
-
-public interface IEventDispatcher {
-    void addListener(final IEventListener eventListener);
-
-    void removeListener(final IEventListener eventListener);
-
-    boolean dispatchEvent(final IEvent iEvent);
-}
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class EventHandler(val priority: Byte = 50)

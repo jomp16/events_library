@@ -17,31 +17,9 @@
  * along with events_library. If not, see <http://www.gnu.org/licenses/>.
  */
 
-buildscript {
-    ext.kotlin_version = '1.0.1-2'
+package tk.jomp16.event.internal.dispatcher.default
 
-    repositories {
-        jcenter()
-    }
+import tk.jomp16.event.api.listener.IEventListener
+import java.lang.reflect.Method
 
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.12.0'
-    }
-}
-
-apply plugin: 'kotlin'
-apply plugin: 'com.github.ben-manes.versions'
-
-group 'tk.jomp16'
-version '2.0.0'
-
-repositories {
-    jcenter()
-}
-
-dependencies {
-    testCompile 'junit:junit:4.12'
-
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-}
+data class EventMethodInfo(val priority: Byte, val eventListener: IEventListener, val method: Method)

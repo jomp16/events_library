@@ -27,11 +27,17 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.12.0'
+
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
     }
 }
 
 apply plugin: 'kotlin'
 apply plugin: 'com.github.ben-manes.versions'
+
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+apply plugin: 'com.jfrog.bintray'
 
 group 'tk.jomp16'
 version '2.0.0'
@@ -44,4 +50,79 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+}
+
+signing {
+    sign configurations.archives
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom.withXml {
+                def node = asNode()
+
+                node.appendNode('name', 'events_library')
+                node.appendNode('description', 'A library for a simple Event handler in Kotlin. Useful to plugins.')
+                node.appendNode('url', 'https://github.com/jomp16/events_library')
+
+                def licenseNode = node.appendNode('licenses').appendNode('license')
+
+                licenseNode.appendNode('name', 'GNU Lesser General Public License')
+                licenseNode.appendNode('url', 'http://www.gnu.org/licenses/lgpl-3.0.txt')
+                licenseNode.appendNode('distribution', 'repo')
+
+                node.appendNode('scm').appendNode('url', 'https://github.com/jomp16/events_library.git')
+
+                def node1 = node.appendNode('developers').appendNode('developer')
+
+                node1.appendNode('id', 'jomp16')
+                node1.appendNode('name', 'José Olívio M. Pedrosa')
+                node1.appendNode('email', 'joseoliviopedrosa@gmail.com')
+                node1.appendNode('url', 'https://jomp16.tk')
+            }
+        }
+    }
+}
+
+bintray {
+    user = System.properties['BINTRAY_USER']
+    key = System.properties['BINTRAY_KEY']
+
+    pkg {
+        repo = 'maven'
+        name = 'events_library'
+        licenses = ['LGPLv3']
+        vcsUrl = 'https://github.com/jomp16/events_library.git'
+
+        publications = ['mavenJava']
+
+        version {
+            gpg {
+                sign = true
+            }
+        }
+    }
 }

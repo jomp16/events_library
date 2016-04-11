@@ -25,11 +25,11 @@ import tk.jomp16.event.api.annotations.EventHandler
 import tk.jomp16.event.api.dispatcher.IEventDispatcher
 import tk.jomp16.event.api.event.IEvent
 import tk.jomp16.event.api.listener.IEventListener
-import tk.jomp16.event.internal.dispatcher.default.DefaultEventDispatcher
+import tk.jomp16.event.internal.dispatcher.default.BoolDefaultEventDispatcher
 import java.util.*
 
-class EventsTest {
-    private var eventDispatcher: IEventDispatcher = DefaultEventDispatcher()
+class BoolEventsTest {
+    private var eventDispatcher: IEventDispatcher = BoolDefaultEventDispatcher()
 
     @Test
     fun testDispatch() {
@@ -43,16 +43,42 @@ class EventsTest {
 
             val eventListener = object : IEventListener {
                 @EventHandler
-                fun lol1(eventTest: EventTest1) = Assert.assertEquals(uuid1, eventTest.value)
+                fun lol1(eventTest: EventTest1): Boolean {
+                    Assert.assertEquals(uuid1, eventTest.value)
+
+                    return true
+                }
 
                 @EventHandler
-                fun lol2(eventTest: EventTest2) = Assert.assertEquals(uuid2, eventTest.value)
+                fun lol2(eventTest: EventTest2): Boolean {
+                    Assert.assertEquals(uuid2, eventTest.value)
+
+                    return true
+                }
 
                 @EventHandler
-                fun lol3(eventTest: EventTest3) = Assert.assertEquals(uuid3, eventTest.value)
+                fun lol3(eventTest: EventTest3): Boolean {
+                    Assert.assertEquals(uuid3, eventTest.value)
+
+                    return true
+                }
 
                 @EventHandler
-                fun lol4(eventTest: EventTest4) = Assert.assertEquals(uuid4, eventTest.value)
+                fun lol4(eventTest: EventTest4): Boolean {
+                    Assert.assertEquals(uuid4, eventTest.value)
+
+                    return true
+                }
+
+                @EventHandler
+                fun lol5(eventTest: EventTest5): Boolean {
+                    return false
+                }
+
+                @EventHandler
+                fun lol6(eventTest: EventTest5): Boolean {
+                    return true
+                }
             }
 
             eventDispatcher += eventListener
@@ -61,6 +87,7 @@ class EventsTest {
             Assert.assertTrue(eventDispatcher.dispatchEvent(EventTest2(uuid2)))
             Assert.assertTrue(eventDispatcher.dispatchEvent(EventTest3(uuid3)))
             Assert.assertTrue(eventDispatcher.dispatchEvent(EventTest4(uuid4)))
+            Assert.assertFalse(eventDispatcher.dispatchEvent(EventTest5()))
 
             eventDispatcher -= eventListener;
         }
@@ -75,4 +102,6 @@ class EventsTest {
     class EventTest3(val value: String) : IEvent
 
     class EventTest4(val value: String) : IEvent
+
+    class EventTest5() : IEvent
 }

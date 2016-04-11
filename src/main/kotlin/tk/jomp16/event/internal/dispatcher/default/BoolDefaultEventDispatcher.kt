@@ -20,57 +20,38 @@
 package tk.jomp16.event.internal.dispatcher.default
 
 import tk.jomp16.event.api.annotations.EventHandler
-import tk.jomp16.event.api.dispatcher.IEventDispatcher
 import tk.jomp16.event.api.event.IEvent
 import tk.jomp16.event.api.listener.IEventListener
-import tk.jomp16.event.internal.EventMethodInfoComparator
 import java.util.*
 
-open class DefaultEventDispatcher : IEventDispatcher {
-    val eventListeners: MutableList<IEventListener> = LinkedList()
-    val eventMethodInfoMap: MutableMap<Class<out IEvent>, MutableList<EventMethodInfo>> = LinkedHashMap()
-
-    protected val eventMethodInfoComparator: Comparator<EventMethodInfo> = EventMethodInfoComparator()
-
-    override fun addListener(eventListener: IEventListener) {
-        if (eventListeners.contains(eventListener)) return
-
-        eventListeners += eventListener
-
-        registerEventHandlerMethods(eventListener)
-    }
-
-    override fun removeListener(eventListener: IEventListener) {
-        if (!eventListeners.contains(eventListener)) return
-
-        eventListeners -= eventListener
-
-        eventMethodInfoMap.values.forEach {
-            val eventMethodInfoIterator = it.iterator()
-
-            while (eventMethodInfoIterator.hasNext()) {
-                val eventMethodInfo = eventMethodInfoIterator.next()
-
-                if (eventMethodInfo.eventListener == eventListener) eventMethodInfoIterator.remove()
-            }
-        }
-    }
-
+/**
+ * Created with IntelliJ IDEA.
+ *
+ * @author jomp16
+ * Date: 10/04/16
+ * Time: 20:57
+ */
+class BoolDefaultEventDispatcher : DefaultEventDispatcher() {
     override fun dispatchEvent(iEvent: IEvent): Boolean {
         val eventMethodInfoQueue = eventMethodInfoMap[iEvent.javaClass]
 
         if (eventMethodInfoQueue == null || eventMethodInfoQueue.isEmpty()) return false
 
-        eventMethodInfoQueue.sortedWith(eventMethodInfoComparator).forEach { it.method.invoke(it.eventListener, iEvent) }
+        var result = true
 
-        return true
+        eventMethodInfoQueue.sortedWith(eventMethodInfoComparator).forEach {
+            val tmp = it.method.invoke(it.eventListener, iEvent)
+
+            if (result) {
+                // Unneeded, because I already check at registerEventHandlerMethods if method returns Boolean, but Kotlin has a smart cast
+                if (tmp is Boolean) result = tmp
+            }
+        }
+
+        return result
     }
 
-    override fun plusAssign(other: IEventListener) = addListener(other)
-
-    override fun minusAssign(other: IEventListener) = removeListener(other)
-
-    open fun registerEventHandlerMethods(eventListener: IEventListener) {
+    override fun registerEventHandlerMethods(eventListener: IEventListener) {
         val methods = eventListener.javaClass.declaredMethods
 
         for (method in methods) {
@@ -91,7 +72,7 @@ open class DefaultEventDispatcher : IEventDispatcher {
 
             val param = parameters[0]
 
-            if (method.returnType != Void.TYPE) continue
+            if (method.returnType != Boolean::class.java) continue
 
             if (!IEvent::class.java.isAssignableFrom(param)) continue
 

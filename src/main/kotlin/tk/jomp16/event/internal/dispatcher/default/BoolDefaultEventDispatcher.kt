@@ -33,13 +33,13 @@ import java.util.*
  */
 class BoolDefaultEventDispatcher : DefaultEventDispatcher() {
     override fun dispatchEvent(iEvent: IEvent): Boolean {
-        val eventMethodInfoQueue = eventMethodInfoMap[iEvent.javaClass]
+        val eventMethodInfo = eventMethodInfoMap[iEvent.javaClass]
 
-        if (eventMethodInfoQueue == null || eventMethodInfoQueue.isEmpty()) return false
+        if (eventMethodInfo == null || eventMethodInfo.isEmpty()) return false
 
         var result = true
 
-        eventMethodInfoQueue.sortedWith(eventMethodInfoComparator).forEach {
+        eventMethodInfo.sortedWith(eventMethodInfoComparator).forEach {
             val tmp = it.method.invoke(it.eventListener, iEvent)
 
             if (result) {
@@ -72,7 +72,7 @@ class BoolDefaultEventDispatcher : DefaultEventDispatcher() {
 
             val param = parameters[0]
 
-            if (method.returnType != Boolean::class.java) continue
+            if (method.returnType != Boolean::class.javaPrimitiveType) continue
 
             if (!IEvent::class.java.isAssignableFrom(param)) continue
 

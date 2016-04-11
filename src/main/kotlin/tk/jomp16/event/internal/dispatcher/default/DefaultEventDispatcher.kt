@@ -57,11 +57,11 @@ open class DefaultEventDispatcher : IEventDispatcher {
     }
 
     override fun dispatchEvent(iEvent: IEvent): Boolean {
-        val eventMethodInfoQueue = eventMethodInfoMap[iEvent.javaClass]
+        val eventMethodInfo = eventMethodInfoMap[iEvent.javaClass]
 
-        if (eventMethodInfoQueue == null || eventMethodInfoQueue.isEmpty()) return false
+        if (eventMethodInfo == null || eventMethodInfo.isEmpty()) return false
 
-        eventMethodInfoQueue.sortedWith(eventMethodInfoComparator).forEach { it.method.invoke(it.eventListener, iEvent) }
+        eventMethodInfo.sortedWith(eventMethodInfoComparator).forEach { it.method.invoke(it.eventListener, iEvent) }
 
         return true
     }
